@@ -66,9 +66,41 @@ fn main() {
     // str_fn is now moved to str_main
     println!("{}", str_main);
 
+    // it is also psosible to maintain ownership using "references"
+    // if we don't want to transfer ownership to a function, then pass a reference 
+    let s11: String = String::from("I will be passed as ref"); // s11 is still in scope after this
+    // and ownership is not given to calc_len
+    let s11_len: usize = calc_len(&s11); // pass a reference
+    println!("so both s11 and s11_len are: {}, {}", s11, s11_len);
+
+    // references do not allow modification to the original variable
+    let s12: String = String::from("I cannot be modified from a reference");
+    change_str(&s12); // passed a reference
+    println!("{}", s12);
+
+    // but references can still modify values using mutable references
+    // for mutable references, the variable should be mutable
+    // note: all variables are immutable by default
+    let mut s13:String = String::from("I can be modified ");
+    println!("before mutable modification s13: {}", s13);
+    change_mut_str(&mut s13);
+    println!("after mutable modification s13: {}", s13);
+
+    // rust places a limit on the number of mutable refernces as one
+    let mut s14: String = String::from("there can be only one mutable reference");
+    let s14_ref1 = &mut s14; // first
+    let s14_ref2 = &mut s14; // second
+    let s14_ref3 = &mut s14; // third
+    let s14_ref4 = &mut s14; // latest
+    // the line below causes error as there are >1 mutable references
+    // interesetingly, they only cause an error if the lastest one is not used
+    // println!("{s14_ref1}, {s14_ref2}");
+    // if latest one is used, then no problem
+    println!("{s14_ref4}"); // if any of s14_refi is used, (i = 1 to 3) is used = error
+    // this prevents data races at compile time
 
 } // end of scope of x
-// drop is called here automatically
+// drop is called here automatically so variables go out of scope
 
 fn takes_ownership(some_str: String) {
     println!("{}", some_str);
@@ -76,6 +108,7 @@ fn takes_ownership(some_str: String) {
 
 
 fn creates_copy(some_int: i32){
+    // some_int is passed by value
     println!("{}", some_int);
 } // some_int is still out of scope here and this some_int is not the same as in main
 
@@ -83,3 +116,27 @@ fn gives_ownership() -> String{
     let str_fn: String = String::from("created in function, outside main");
     str_fn // return string
 } // str_fn is out of scope, but if function value is stored in a varaible, that is still available on heap
+
+fn calc_len(s11_ref: &String) -> usize{
+    // here a reference is passed to the function
+    // println!("{}", s11);
+    // return length using expression
+    s11_ref.len()
+} // the s11 in main is still in scope here
+// however, s11_ref is dropped as it was just a reference
+// references are similar to pointers
+// s11_ref is said to have borrowed the value of s11
+
+// borrowing using a refernce, only to use that value
+// cannot modify it
+fn change_str(s12_ref: &String){
+    // attempting to modify a borrowed value
+    // throws an error as a refernce cannot modify an actual string
+    // s12_ref.push_str("see! not changed");
+}
+
+// the parameter is a mutable reference so it can be modified here
+// and the changes will reflect in the main variable
+fn change_mut_str(s13_ref: &mut String){
+    s13_ref.push_str("see, I got modified in a function");
+}
